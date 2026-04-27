@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Experimento Social - Ética Aplicada</title>
+
+<style>
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #eef2f7;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 1100px;
+    margin: auto;
+}
+h1 { text-align: center; }
+
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.bar {
+    height: 24px;
+    border-radius: 6px;
+    margin: 6px 0;
+    color: white;
+    padding-left: 10px;
+    line-height: 24px;
+    font-size: 13px;
+}
+
+.green { background: #2ecc71; }
+.blue { background: #3498db; }
+.red { background: #e74c3c; }
+
+.question-block { margin-bottom: 20px; }
+
+.option {
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    margin: 5px 0;
+    cursor: pointer;
+}
+.option.selected {
+    border-color: #3498db;
+    background: #eaf4ff;
+}
+
+.feedback {
+    margin-top: 10px;
+    color: #2ecc71;
+    font-weight: bold;
+    display: none;
+}
+
+.chat { max-height: 250px; overflow-y: auto; }
+
+.person {
+    background: #fafafa;
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 8px;
+}
+
+input { width: 70%; padding: 8px; }
+button {
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    background: #3498db;
+    color: white;
+}
+
+.report h2 { margin-top: 20px; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Experimento Social: Ética en Contextos Cotidianos</h1>
+
+<div class="card">
+<h2>📊 Resultados</h2>
+<div id="results"></div>
+</div>
+
+<div class="card">
+<h2>🗳️ Participa</h2>
+<div id="questions"></div>
+<div id="feedback" class="feedback">✔️ Tu respuesta fue registrada</div>
+</div>
+
+<div class="card">
+<h2>💬 Opiniones</h2>
+<input id="msg" placeholder="Escribe tu opinión...">
+<button onclick="addMessage()">Enviar</button>
+<div class="chat" id="chat"></div>
+</div>
+
+<!-- INFORME -->
+<div class="card report">
+
+<h2>📄 Informe del Experimento Social</h2>
+
+<h3>1. Título</h3>
+<p>Percepciones éticas en contextos cotidianos</p>
+
+<h3>2. Objetivo</h3>
+<p>Analizar cómo las personas toman decisiones éticas en situaciones reales y cómo estas cambian dependiendo del contexto.</p>
+
+<h3>3. Justificación desde lo ético</h3>
+<p>
+Este experimento se basa en la ética aplicada, la cual propone que la ética debe analizar situaciones reales y no quedarse solo en lo teórico. Se busca comprender cómo las personas actúan en la práctica frente a dilemas cotidianos.
+</p>
+
+<h3>4. Descripción del experimento</h3>
+<p>
+Se diseñaron preguntas basadas en situaciones reales (como encontrar dinero o mentir para evitar problemas) y se creó una herramienta interactiva donde las personas pueden responder y ver resultados en tiempo real.
+</p>
+
+<h3>5. Evidencia</h3>
+<p>
+La evidencia se basa en la participación dentro de la herramienta, donde se registran respuestas, se generan estadísticas y se recopilan opiniones escritas.
+</p>
+
+<h3>6. Conclusión</h3>
+<p>
+Se evidenció que las decisiones éticas varían dependiendo del contexto, la necesidad y la presión social. Muchas personas no actúan igual cuando nadie las observa, lo que demuestra que la ética no es completamente fija, sino dinámica.
+</p>
+
+<h3>7. Referencias</h3>
+<p>
+Bobadilla González, M. (2025). Ética Aplicada. Universidad Pontificia Bolivariana.<br>
+Cohn, A. et al. (2019). Civic honesty around the globe.
+</p>
+
+</div>
+
+</div>
+
+<script>
+const preguntas = [
+{
+texto: "Si encontraras una billetera con dinero en la calle y nadie te está observando, ¿qué harías?",
+key: "q1",
+opciones: ["Devolverla", "Depende de la situación", "Quedarme con ella"]
+},
+{
+texto: "Si una mentira puede evitarte un problema importante sin afectar a nadie directamente, ¿la dirías?",
+key: "q2",
+opciones: ["Sí", "Depende", "No"]
+},
+{
+texto: "¿Actúas igual cuando nadie te ve?",
+key: "q3",
+opciones: ["Sí", "No", "No estoy seguro"]
+}
+];
+
+let data = JSON.parse(localStorage.getItem("data")) || {
+q1:[64,26,10],
+q2:[57,15,28],
+q3:[37,49,14]
+};
+
+let messages = JSON.parse(localStorage.getItem("msgs")) || [
+"La gente cambia cuando nadie la ve",
+"Depende de la situación",
+"No es tan simple como parece"
+];
+
+function render(){
+let qHTML = "";
+preguntas.forEach((q,i)=>{
+qHTML += `<div class="question-block">`;
+qHTML += `<p><strong>${q.texto}</strong></p>`;
+q.opciones.forEach((op,j)=>{
+qHTML += `<div class="option" onclick="selectOption(${i},${j},this)">${op}</div>`;
+});
+qHTML += `</div>`;
+});
+document.getElementById("questions").innerHTML = qHTML;
+
+renderResults();
+renderChat();
+}
+
+function selectOption(qIndex, opIndex, el){
+let block = el.parentNode;
+block.querySelectorAll(".option").forEach(o=>o.classList.remove("selected"));
+el.classList.add("selected");
+
+data[preguntas[qIndex].key][opIndex]++;
+save();
+renderResults();
+
+let fb = document.getElementById("feedback");
+fb.style.display="block";
+setTimeout(()=>fb.style.display="none",2000);
+}
+
+function renderResults(){
+let html="";
+preguntas.forEach(q=>{
+let values=data[q.key];
+let total=values.reduce((a,b)=>a+b,0);
+
+html+=`<p><strong>${q.texto}</strong></p>`;
+values.forEach((v,i)=>{
+let p=Math.round(v/total*100);
+let color=i===0?"green":i===1?"blue":"red";
+html+=`<div class="bar ${color}" style="width:${p}%">${q.opciones[i]} - ${p}%</div>`;
+});
+});
+document.getElementById("results").innerHTML=html;
+}
+
+function addMessage(){
+let val=document.getElementById("msg").value;
+if(val.trim()!==""){
+messages.push(val);
+document.getElementById("msg").value="";
+save();
+renderChat();
+}
+}
+
+function renderChat(){
+let html="";
+messages.slice().reverse().forEach(m=>{
+html+=`<div class="person">${m}</div>`;
+});
+document.getElementById("chat").innerHTML=html;
+}
+
+function save(){
+localStorage.setItem("data",JSON.stringify(data));
+localStorage.setItem("msgs",JSON.stringify(messages));
+}
+
+render();
+</script>
+
+</body>
+</html>
